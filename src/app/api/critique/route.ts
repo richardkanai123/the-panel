@@ -7,6 +7,7 @@ import {
   PERSONA_GENERATION,
 } from "@/lib/model";
 import { PERSONA_BY_ID } from "@/lib/personas";
+import { checkSessionRateLimit } from "@/lib/rate-limit";
 import { critiqueRequestSchema } from "@/lib/schemas";
 
 export const maxDuration = 30;
@@ -26,6 +27,12 @@ export async function POST(req: Request) {
     }
 
     const { prompt: idea, personaId } = parsed.data;
+
+    const rateLimitError = await checkSessionRateLimit(req, idea);
+    if (rateLimitError) {
+      return rateLimitError;
+    }
+
     const persona = PERSONA_BY_ID[personaId];
 
     if (!persona) {

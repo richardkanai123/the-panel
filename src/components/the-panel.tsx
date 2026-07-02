@@ -49,6 +49,7 @@ export function ThePanel() {
   const [verdictCritiques, setVerdictCritiques] =
     useState<PartialCritiques | null>(null);
   const [verdictError, setVerdictError] = useState<string | null>(null);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   const { completion, complete, isLoading, error, setCompletion } =
     useCompletion({
@@ -79,9 +80,14 @@ export function ThePanel() {
           return;
         }
 
+        const message = err.message;
+        if (message.includes("free pitches")) {
+          setSessionError(message);
+        }
+
         setErrors((current) => ({
           ...current,
-          [personaId]: err.message,
+          [personaId]: message,
         }));
         activePersonaRef.current = null;
         setActivePersonaId(null);
@@ -129,6 +135,7 @@ export function ThePanel() {
     setActivePersonaId(null);
     setVerdictCritiques(null);
     setVerdictError(null);
+    setSessionError(null);
     setVerdictTriggerCount(0);
     setCompletion("");
     setPhase("choosing");
@@ -145,6 +152,7 @@ export function ThePanel() {
     setActivePersonaId(null);
     setVerdictCritiques(null);
     setVerdictError(null);
+    setSessionError(null);
     setVerdictTriggerCount(0);
     setCompletion("");
   };
@@ -206,6 +214,12 @@ export function ThePanel() {
       {ideaSubmitted ? (
         <section className="panel-stage panel-stage-enter space-y-6 rounded-[2rem] border-4 border-slate-900 p-5 shadow-[8px_8px_0_0_#0f172a] sm:p-8">
           <PitchCard idea={submittedIdea} />
+
+          {sessionError ? (
+            <p className="rounded-2xl border-4 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {sessionError}
+            </p>
+          ) : null}
 
           <div className="space-y-4 text-center">
             <h2 className="font-(family-name:--font-display) text-2xl font-bold uppercase tracking-wide text-slate-900">
