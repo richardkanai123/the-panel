@@ -73,8 +73,8 @@ Optional:
 # Alias — also supported
 GOOGLE_API_KEY=your-key-here
 
-# Default: gemini-2.5-flash
-AI_MODEL=gemini-2.5-flash
+# Optional — defaults to gemini-2.5-flash
+# AI_MODEL=gemini-2.5-flash
 ```
 
 ### 3. Run locally
