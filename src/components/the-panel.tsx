@@ -11,6 +11,7 @@ import { PitchCard } from "@/components/pitch-card";
 import { VerdictCard } from "@/components/verdict-card";
 import { PanelButton } from "@/components/ui/panel-button";
 import { PERSONAS } from "@/lib/personas";
+import { isRateLimitError, parseApiErrorMessage } from "@/lib/api-error";
 import type { PartialCritiques, PersonaId } from "@/lib/schemas";
 import { ideaSchema } from "@/lib/schemas";
 
@@ -80,15 +81,17 @@ export function ThePanel() {
           return;
         }
 
-        const message = err.message;
-        if (message.includes("free pitches")) {
+        const message = parseApiErrorMessage(err.message);
+
+        if (isRateLimitError(err.message)) {
           setSessionError(message);
+        } else {
+          setErrors((current) => ({
+            ...current,
+            [personaId]: message,
+          }));
         }
 
-        setErrors((current) => ({
-          ...current,
-          [personaId]: message,
-        }));
         activePersonaRef.current = null;
         setActivePersonaId(null);
         setPhase("choosing");
@@ -247,7 +250,7 @@ export function ThePanel() {
                 error={
                   errors[persona.id] ??
                   (activePersonaId === persona.id && error
-                    ? error.message
+                    ? parseApiErrorMessage(error.message)
                     : null)
                 }
                 isActive={activePersonaId === persona.id}

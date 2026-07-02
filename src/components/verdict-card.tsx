@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { SpeechBubble } from "@/components/speech-bubble";
 import { Spinner } from "@/components/ui/spinner";
 import type { PartialCritiques } from "@/lib/schemas";
+import { parseApiErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 
 type VerdictCardProps = {
@@ -44,7 +45,7 @@ export function VerdictCard({
         onFinish();
       },
       onError: (err) => {
-        onError(err.message);
+        onError(parseApiErrorMessage(err.message));
       },
     });
 
@@ -118,7 +119,8 @@ export function VerdictCard({
           </div>
         ) : error ? (
           <span className="font-sans text-sm text-red-600">
-            {error.message || "The Panel couldn't reach a verdict."}
+            {parseApiErrorMessage(error.message) ||
+              "The Panel couldn't reach a verdict."}
           </span>
         ) : (
           completion
