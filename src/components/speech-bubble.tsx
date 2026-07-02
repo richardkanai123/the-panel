@@ -48,7 +48,7 @@ export function SpeechBubble({
           aria-hidden
         />
       ) : null}
-      <div className="text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
+      <div className="font-(family-name:--font-hand) text-base leading-relaxed wrap-break-word whitespace-pre-wrap max-h-48 overflow-y-auto sm:max-h-56">
         {children}
         {showCursor ? (
           <span className="ml-0.5 inline-block animate-pulse">▍</span>

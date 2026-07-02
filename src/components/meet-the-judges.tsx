@@ -1,7 +1,7 @@
 "use client";
 
 import { PersonaCharacter } from "@/components/characters/persona-character";
-import { Button } from "@/components/ui/button";
+import { PanelButton } from "@/components/ui/panel-button";
 import {
   Drawer,
   DrawerClose,
@@ -23,10 +23,11 @@ function JudgeCard({ persona }: { persona: Persona }) {
         <button
           type="button"
           className={cn(
-            "flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl border-4 p-4 text-left transition-all duration-200 sm:p-5",
-            "border-slate-900/25 bg-white/80 hover:border-slate-900/50 hover:shadow-lg",
+            "panel-hover-lift-card flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl border-4 p-4 text-left sm:p-5",
+            "border-slate-900/25 bg-white/80",
+            "transition-[transform,border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
             "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-900/30",
-            "active:scale-[0.98]",
+            "active:scale-[0.97]",
           )}
         >
           <div className="flex h-40 w-full max-w-[180px] items-center justify-center">
@@ -128,14 +129,13 @@ function JudgeCard({ persona }: { persona: Persona }) {
 
           <DrawerFooter className="px-0 pt-4">
             <DrawerClose asChild>
-              <Button
-                className={cn(
-                  "w-full rounded-full border-4 border-slate-900 font-bold uppercase tracking-wide shadow-[3px_3px_0_0_#0f172a]",
-                  persona.theme.button,
-                )}
+              <PanelButton
+                variant="persona"
+                size="full"
+                personaClassName={persona.theme.button}
               >
                 Got it
-              </Button>
+              </PanelButton>
             </DrawerClose>
           </DrawerFooter>
         </div>

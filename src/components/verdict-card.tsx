@@ -20,8 +20,7 @@ const VERDICT_THEME = {
   bg: "bg-violet-100",
   border: "border-violet-600",
   ring: "ring-violet-400",
-  bubble:
-    "bg-violet-50 border-violet-600 font-[family-name:var(--font-display)]",
+  bubble: "bg-violet-50 border-violet-600",
   bubbleText: "text-violet-950",
   button: "",
   spotlight: "shadow-[0_0_40px_rgba(139,92,246,0.4)]",
@@ -35,6 +34,7 @@ export function VerdictCard({
   onError,
 }: VerdictCardProps) {
   const lastTriggerRef = useRef(0);
+  const gavelKeyRef = useRef(0);
 
   const { completion, complete, isLoading, error, setCompletion } =
     useCompletion({
@@ -58,6 +58,7 @@ export function VerdictCard({
     }
 
     lastTriggerRef.current = triggerCount;
+    gavelKeyRef.current += 1;
     setCompletion("");
 
     void complete("", {
@@ -78,13 +79,16 @@ export function VerdictCard({
   return (
     <article
       className={cn(
-        "flex flex-col items-center gap-4 rounded-3xl border-4 p-6",
+        "panel-verdict-enter flex flex-col items-center gap-4 rounded-3xl border-4 p-6",
         VERDICT_THEME.bg,
         VERDICT_THEME.border,
         VERDICT_THEME.spotlight,
       )}
     >
-      <GavelIcon className={cn(isLoading && "animate-panel-gavel")} />
+      <GavelIcon
+        key={gavelKeyRef.current}
+        className="animate-panel-gavel-once"
+      />
       <div className="text-center">
         <h3 className="font-(family-name:--font-display) text-2xl font-bold uppercase tracking-wide text-violet-950">
           The Verdict
@@ -108,12 +112,12 @@ export function VerdictCard({
         className="w-full max-w-xl"
       >
         {showSpinner ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 font-sans text-sm">
             <Spinner />
             <span>Summoning the chair…</span>
           </div>
         ) : error ? (
-          <span className="text-red-600">
+          <span className="font-sans text-sm text-red-600">
             {error.message || "The Panel couldn't reach a verdict."}
           </span>
         ) : (

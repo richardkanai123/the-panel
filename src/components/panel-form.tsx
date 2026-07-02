@@ -1,5 +1,6 @@
 "use client";
 
+import { PanelButton } from "@/components/ui/panel-button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -64,35 +65,25 @@ export function PanelForm({
 
       <div className="flex flex-wrap gap-2">
         {EXAMPLE_IDEAS.map((example) => (
-          <button
+          <PanelButton
             key={example}
-            type="button"
+            variant="chip"
             disabled={disabled}
             onClick={() => onIdeaChange(example)}
-            className="rounded-full border-2 border-slate-900 bg-yellow-100 px-3 py-1.5 text-xs font-semibold text-slate-900 transition-colors hover:bg-yellow-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {example}
-          </button>
+          </PanelButton>
         ))}
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={disabled}
-          className="rounded-full border-4 border-slate-900 bg-emerald-400 px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-[3px_3px_0_0_#0f172a] transition-transform hover:bg-emerald-300 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <PanelButton onClick={onSubmit} disabled={disabled}>
           Submit to the Panel
-        </button>
+        </PanelButton>
         {showReset ? (
-          <button
-            type="button"
-            onClick={onReset}
-            className="rounded-full border-4 border-slate-900 bg-white px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-[3px_3px_0_0_#0f172a] transition-transform hover:bg-slate-50 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
-          >
+          <PanelButton variant="secondary" onClick={onReset}>
             Try another idea
-          </button>
+          </PanelButton>
         ) : null}
       </div>
     </section>

@@ -7,7 +7,9 @@ import { MeetTheJudges } from "@/components/meet-the-judges";
 import { PanelForm } from "@/components/panel-form";
 import { PanelProgress } from "@/components/panel-progress";
 import { PersonaBooth } from "@/components/persona-booth";
+import { PitchCard } from "@/components/pitch-card";
 import { VerdictCard } from "@/components/verdict-card";
+import { PanelButton } from "@/components/ui/panel-button";
 import { PERSONAS } from "@/lib/personas";
 import type { PartialCritiques, PersonaId } from "@/lib/schemas";
 import { ideaSchema } from "@/lib/schemas";
@@ -93,6 +95,7 @@ export function ThePanel() {
   const heardCount = PERSONA_IDS.filter((id) => critiques[id]?.trim()).length;
   const canRequestVerdict =
     heardCount >= 2 && !isStreaming && phase !== "verdict";
+  const judgesRemaining = Math.max(0, 2 - heardCount);
 
   const handleConsultPersona = useCallback(
     (personaId: PersonaId) => {
@@ -172,20 +175,19 @@ export function ThePanel() {
   };
 
   const showReset = phase === "done";
+  const showVerdictCta =
+    heardCount >= 1 && verdictTriggerCount === 0 && phase !== "verdict";
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
       <header className="space-y-3 text-center">
-        <p className="inline-block rounded-full border-4 border-slate-900 bg-yellow-300 px-4 py-1 text-xs font-bold uppercase tracking-[0.25em] text-slate-900 shadow-[3px_3px_0_0_#0f172a]">
-          Live demo
-        </p>
         <h1 className="font-(family-name:--font-display) text-5xl font-extrabold uppercase tracking-tight text-slate-900 sm:text-6xl">
           The Panel
         </h1>
         <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-700">
           Pitch your startup idea to three AI judges — one at a time. When
           you&apos;ve heard enough, get the final verdict. No appeals. No BS.
-          Just the truth. Powered by Google Gemini and Vercel AI SDK.
+          Just the truth.
         </p>
       </header>
 
@@ -202,7 +204,9 @@ export function ThePanel() {
       />
 
       {ideaSubmitted ? (
-        <section className="panel-stage space-y-6 rounded-[2rem] border-4 border-slate-900 p-5 shadow-[8px_8px_0_0_#0f172a] sm:p-8">
+        <section className="panel-stage panel-stage-enter space-y-6 rounded-[2rem] border-4 border-slate-900 p-5 shadow-[8px_8px_0_0_#0f172a] sm:p-8">
+          <PitchCard idea={submittedIdea} />
+
           <div className="space-y-4 text-center">
             <h2 className="font-(family-name:--font-display) text-2xl font-bold uppercase tracking-wide text-slate-900">
               {isStreaming ? "Spotlight on…" : "Choose your judge"}
@@ -221,7 +225,7 @@ export function ThePanel() {
           </div>
 
           <div className="grid items-start gap-5 md:grid-cols-3">
-            {PERSONAS.map((persona) => (
+            {PERSONAS.map((persona, index) => (
               <PersonaBooth
                 key={persona.id}
                 persona={persona}
@@ -242,19 +246,27 @@ export function ThePanel() {
                   phase === "verdict"
                 }
                 ideaSubmitted={ideaSubmitted}
+                staggerIndex={index}
               />
             ))}
           </div>
 
-          {canRequestVerdict ? (
-            <div className="flex justify-center pt-2">
-              <button
-                type="button"
+          {showVerdictCta ? (
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <PanelButton
+                variant="accent"
+                size="lg"
                 onClick={handleRequestVerdict}
-                className="rounded-full border-4 border-slate-900 bg-violet-500 px-8 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-[4px_4px_0_0_#0f172a] transition-transform hover:bg-violet-600 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                disabled={!canRequestVerdict}
               >
                 Get the Verdict
-              </button>
+              </PanelButton>
+              {!canRequestVerdict && judgesRemaining > 0 ? (
+                <p className="text-xs text-slate-600">
+                  Hear from {judgesRemaining} more judge
+                  {judgesRemaining === 1 ? "" : "s"} first
+                </p>
+              ) : null}
             </div>
           ) : null}
 
