@@ -57,6 +57,7 @@ export async function POST(req: Request) {
     const message =
       error instanceof Error ? error.message : "Failed to generate critique";
 
+    console.error(error);
     if (message.includes("GOOGLE_GENERATIVE_AI_API_KEY")) {
       return Response.json(
         { error: "Panel is offline — check API key" },

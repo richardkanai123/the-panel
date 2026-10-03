@@ -3,16 +3,75 @@ import { createHash } from "node:crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-const redis = Redis.fromEnv();
-
 export const SESSION_LIMIT = 3;
 export const SESSION_WINDOW = "24 h" as const;
 
-export const sessionRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(SESSION_LIMIT, SESSION_WINDOW),
-  prefix: "the-panel:session",
-});
+function redisRestUrl(): string | undefined {
+  return (
+    process.env.UPSTASH_REDIS_REST_URL?.trim() ||
+    process.env.KV_REST_API_URL?.trim()
+  );
+}
+
+function redisRestToken(): string | undefined {
+  return (
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
+    process.env.KV_REST_API_TOKEN?.trim()
+  );
+}
+
+export function isRateLimitConfigured(): boolean {
+  return Boolean(redisRestUrl() && redisRestToken());
+}
+
+let redisClient: Redis | undefined;
+let sessionRateLimitClient: Ratelimit | undefined;
+
+function getRedis(): Redis {
+  if (!redisClient) {
+    redisClient = Redis.fromEnv();
+  }
+  return redisClient;
+}
+
+function getSessionRateLimit(): Ratelimit {
+  if (!sessionRateLimitClient) {
+    sessionRateLimitClient = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(SESSION_LIMIT, SESSION_WINDOW),
+      prefix: "the-panel:session",
+    });
+  }
+  return sessionRateLimitClient;
+}
+
+function isRedisConnectivityError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const cause = error.cause;
+  const causeCode =
+    cause instanceof Error && "code" in cause
+      ? String((cause as NodeJS.ErrnoException).code)
+      : "";
+  return (
+    error.message.includes("fetch failed") ||
+    causeCode === "ENOTFOUND" ||
+    causeCode === "ECONNREFUSED" ||
+    causeCode === "ETIMEDOUT"
+  );
+}
+
+function skipRateLimitOnRedisFailure(error: unknown): boolean {
+  if (!isRedisConnectivityError(error)) {
+    return false;
+  }
+  console.warn(
+    "[rate-limit] Redis unavailable; skipping session limits.",
+    error instanceof Error ? error.message : error,
+  );
+  return true;
+}
 
 const SESSION_ACTIVE_PREFIX = "the-panel:session-active";
 const SESSION_TTL_SECONDS = 60 * 60 * 24;
@@ -53,19 +112,31 @@ export async function checkSessionRateLimit(
   request: Request,
   idea: string,
 ): Promise<Response | null> {
-  const ip = getClientIp(request);
-  const activeKey = `${SESSION_ACTIVE_PREFIX}:${sessionFingerprint(ip, idea)}`;
-
-  const existing = await redis.get(activeKey);
-  if (existing) {
+  if (!isRateLimitConfigured()) {
     return null;
   }
 
-  const { success, reset } = await sessionRateLimit.limit(ip);
-  if (!success) {
-    return rateLimitResponse(reset);
-  }
+  const ip = getClientIp(request);
+  const activeKey = `${SESSION_ACTIVE_PREFIX}:${sessionFingerprint(ip, idea)}`;
 
-  await redis.set(activeKey, "1", { ex: SESSION_TTL_SECONDS });
-  return null;
+  try {
+    const redis = getRedis();
+    const existing = await redis.get(activeKey);
+    if (existing) {
+      return null;
+    }
+
+    const { success, reset } = await getSessionRateLimit().limit(ip);
+    if (!success) {
+      return rateLimitResponse(reset);
+    }
+
+    await redis.set(activeKey, "1", { ex: SESSION_TTL_SECONDS });
+    return null;
+  } catch (error) {
+    if (skipRateLimitOnRedisFailure(error)) {
+      return null;
+    }
+    throw error;
+  }
 }
